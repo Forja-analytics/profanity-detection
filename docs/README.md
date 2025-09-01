@@ -147,11 +147,13 @@ Create a `.env.local` file with:
 ```env
 # Optional: OpenAI API key for LLM validation
 OPENAI_API_KEY=your_openai_api_key_here
+```
 
 ## Testing
 
 Run the test suite with:
-```
+
+```bash
 npm test
 ```
 Unit tests cover:
