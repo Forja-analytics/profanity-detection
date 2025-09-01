@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Label } from '@/components/ui/label';
 import { Trash2, Plus, Settings, Home, ArrowLeft } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { Loader2, Plus, Trash } from "lucide-react";
 import Link from 'next/link';
 
 interface BlacklistWord {

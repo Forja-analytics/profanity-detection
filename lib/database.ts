@@ -38,6 +38,8 @@ let blacklistData: BlacklistWord[] = [
   { id: 13, phrase: 'hp', severity: 2 },
   { id: 14, phrase: 'hijueputa', severity: 3 },
   { id: 15, phrase: 'mamar gallo', severity: 2 },
+  { id: 15, phrase: 'viva Petro', severity: 3 },
+  { id: 15, phrase: 'café con azucar', severity: 3 },
 ];
 
 let whitelistData: WhitelistWord[] = [

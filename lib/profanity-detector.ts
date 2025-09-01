@@ -1,4 +1,5 @@
 import { getBlacklist, getWhitelist } from './database';
+import { llmDetect } from './llm'; // <-- NUEVO: helper LLM
 
 export interface ProfanityMatch {
   word: string;
@@ -48,6 +49,47 @@ export function normalizeProfanityText(text: string): string {
   return normalized;
 }
 
+/** --------- utils de fusión (reglas ∪ LLM) --------- */
+function overlaps(a: ProfanityMatch, b: ProfanityMatch) {
+  return !(a.end <= b.start || b.end <= a.start);
+}
+
+function mergeMatches(base: ProfanityMatch[], incoming: ProfanityMatch[]): ProfanityMatch[] {
+  const merged = [...base];
+
+  for (const inc of incoming) {
+    let mergedOne = false;
+
+    for (let i = 0; i < merged.length; i++) {
+      const ex = merged[i];
+      if (overlaps(ex, inc)) {
+        merged[i] = {
+          word: ex.word.length >= inc.word.length ? ex.word : inc.word,
+          severity: Math.max(ex.severity, inc.severity),
+          start: Math.min(ex.start, inc.start),
+          end: Math.max(ex.end, inc.end),
+        };
+        mergedOne = true;
+        break;
+      }
+    }
+    if (!mergedOne) merged.push(inc);
+  }
+
+  merged.sort((a, b) => a.start - b.start || a.end - b.end);
+  const out: ProfanityMatch[] = [];
+  const seen = new Set<string>();
+  for (const m of merged) {
+    const key = `${m.start}:${m.end}:${m.word.toLowerCase()}`;
+    if (!seen.has(key)) {
+      seen.add(key);
+      out.push(m);
+    }
+  }
+  return out;
+}
+
+/** --------- detector principal (extensión con LLM) --------- */
 export async function detectProfanity(text: string, useLLM = false): Promise<DetectionResult> {
   const matches: ProfanityMatch[] = [];
   
@@ -59,15 +101,15 @@ export async function detectProfanity(text: string, useLLM = false): Promise<Det
     ]);
 
     // Create sets for faster lookup
-    const whitelistSet = new Set(whitelist.map(w => w.phrase.toLowerCase()));
+    const whitelistSet = new Set(whitelist.map(w => String(w.phrase || '').toLowerCase()));
     
     // Normalize the input text for detection
     const normalizedText = normalizeProfanityText(text);
     const originalLower = text.toLowerCase();
     
-    // Check each word against blacklist
+    // Check each word against blacklist (lógica existente)
     for (const blacklistItem of blacklist) {
-      const phrase = blacklistItem.phrase.toLowerCase();
+      const phrase = String(blacklistItem.phrase || '').toLowerCase();
       
       // Skip if whitelisted
       if (whitelistSet.has(phrase)) {
@@ -80,11 +122,11 @@ export async function detectProfanity(text: string, useLLM = false): Promise<Det
       const containsRegex = new RegExp(escapedPhrase, 'gi');
       
       // Check original text with word boundaries
-      let match;
+      let match: RegExpExecArray | null;
       while ((match = wordBoundaryRegex.exec(originalLower)) !== null) {
         matches.push({
           word: text.substring(match.index, match.index + match[0].length),
-          severity: blacklistItem.severity,
+          severity: Number(blacklistItem.severity ?? 2),
           start: match.index,
           end: match.index + match[0].length
         });
@@ -94,15 +136,15 @@ export async function detectProfanity(text: string, useLLM = false): Promise<Det
       wordBoundaryRegex.lastIndex = 0;
       while ((match = containsRegex.exec(normalizedText)) !== null) {
         const isDuplicate = matches.some(m => 
-          Math.abs(m.start - match.index) < 3 && m.word.toLowerCase().includes(phrase)
+          Math.abs(m.start - match!.index) < 3 && m.word.toLowerCase().includes(phrase)
         );
         
         if (!isDuplicate) {
-          // Find the corresponding text in the original
+          // Find the corresponding text in the original (heurística)
           const originalMatch = text.substring(match.index, match.index + match[0].length);
           matches.push({
             word: originalMatch,
-            severity: blacklistItem.severity,
+            severity: Number(blacklistItem.severity ?? 2),
             start: match.index,
             end: match.index + match[0].length
           });
@@ -113,13 +155,20 @@ export async function detectProfanity(text: string, useLLM = false): Promise<Det
       containsRegex.lastIndex = 0;
     }
 
-    // If LLM is enabled and no matches found, you could add LLM logic here
-    // For now, we'll just use the rule-based detection
-    if (useLLM && matches.length === 0) {
-      // This is where you'd integrate with OpenAI or another LLM
-      // For the demo, we'll skip this implementation
+    // --- NUEVO: si se pide LLM, fusiona resultados (reglas ∪ LLM) ---
+    if (useLLM) {
+      const wl = whitelist.map(w => String(w.phrase || '').toLowerCase());
+      const bl = blacklist.map(b => ({
+        phrase: String(b.phrase || '').toLowerCase(),
+        severity: Number(b.severity ?? 2),
+      }));
+
+      const llm = await llmDetect(text, wl, bl);
+      const merged = mergeMatches(matches, llm.matches as ProfanityMatch[]);
+      return { matches: merged };
     }
 
+    // Regla pura
     return { matches };
   } catch (error) {
     console.error('Error in profanity detection:', error);
