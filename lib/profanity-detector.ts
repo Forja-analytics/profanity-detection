@@ -50,6 +50,9 @@ export async function detectProfanity(text: string, useLLM = false): Promise<Det
   const matches: ProfanityMatch[] = [];
   
   try {
+    // Normalize the input text for detection
+    const normalizedText = normalizeProfanityText(text);
+    
     // Get current blacklist and whitelist
     const [blacklist, whitelist] = await Promise.all([
       getBlacklist(),
@@ -58,7 +61,6 @@ export async function detectProfanity(text: string, useLLM = false): Promise<Det
 
     // Create sets for faster lookup
     const whitelistSet = new Set(whitelist.map(w => w.phrase.toLowerCase()));
-    const words = text.toLowerCase().split(/\s+/);
     
     // Check each word against blacklist
     for (const blacklistItem of blacklist) {
@@ -69,10 +71,12 @@ export async function detectProfanity(text: string, useLLM = false): Promise<Det
         continue;
       }
       
-      // Check for exact matches and partial matches
-      const regex = new RegExp(`\\b${phrase.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'gi');
+      // Check for matches in both original and normalized text
+      const escapedPhrase = phrase.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const regex = new RegExp(`\\b${escapedPhrase}\\b`, 'gi');
       let match;
       
+      // Check original text first
       while ((match = regex.exec(text)) !== null) {
         matches.push({
           word: match[0],
@@ -80,6 +84,27 @@ export async function detectProfanity(text: string, useLLM = false): Promise<Det
           start: match.index,
           end: match.index + match[0].length
         });
+      }
+      
+      // Also check normalized text for obfuscated versions
+      regex.lastIndex = 0; // Reset regex
+      while ((match = regex.exec(normalizedText)) !== null) {
+        // Find corresponding position in original text
+        const originalMatch = text.substring(match.index, match.index + match[0].length);
+        
+        // Avoid duplicates
+        const isDuplicate = matches.some(m => 
+          m.start === match.index && m.end === match.index + match[0].length
+        );
+        
+        if (!isDuplicate) {
+          matches.push({
+            word: originalMatch,
+            severity: blacklistItem.severity,
+            start: match.index,
+            end: match.index + match[0].length
+          });
+        }
       }
     }
 

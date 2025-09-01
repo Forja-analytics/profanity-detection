@@ -2,8 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { detectProfanity, normalizeProfanityText, maskText } from '@/lib/profanity-detector';
 import { logEvaluation } from '@/lib/database';
 
-export const dynamic = 'force-dynamic';
-
 export async function POST(request: NextRequest) {
   try {
     const { text, use_llm } = await request.json();
@@ -15,11 +13,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Normalize the text
-    const normalizedText = normalizeProfanityText(text);
-
     // Detect profanity
-    const detection = await detectProfanity(normalizedText, use_llm || false);
+    const detection = await detectProfanity(text, use_llm || false);
 
     // Create masked text
     const maskedText = maskText(text, detection.matches);
@@ -53,3 +48,5 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
+export const dynamic = 'force-dynamic';
