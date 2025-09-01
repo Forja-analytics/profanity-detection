@@ -159,26 +159,61 @@ Run the development server and test the following scenarios:
 ## CURL Examples
 
 ```bash
+## CURL Examples
+
+# -----------------------------
 # Evaluate text
-curl -X POST http://localhost:3000/api/evaluate \
+# -----------------------------
+curl -X POST https://leafy-gecko-141acf.netlify.app/api/evaluate \
   -H "Content-Type: application/json" \
   -d '{"text": "This is some damn good text", "use_llm": false}'
 
+# -----------------------------
+# Blacklist
+# -----------------------------
+
 # Get blacklist
-curl http://localhost:3000/api/admin/blacklist
+curl https://leafy-gecko-141acf.netlify.app/api/admin/blacklist
 
 # Add to blacklist
-curl -X POST http://localhost:3000/api/admin/blacklist \
+curl -X POST https://leafy-gecko-141acf.netlify.app/api/admin/blacklist \
   -H "Content-Type: application/json" \
   -d '{"phrase": "badword", "severity": 2}'
 
+# Update blacklist word (ej: id=3)
+curl -X PUT https://leafy-gecko-141acf.netlify.app/api/admin/blacklist/3 \
+  -H "Content-Type: application/json" \
+  -d '{"phrase": "updatedword", "severity": 1}'
+
+# Delete blacklist word (ej: id=3)
+curl -X DELETE https://leafy-gecko-141acf.netlify.app/api/admin/blacklist/3
+
+# -----------------------------
+# Whitelist
+# -----------------------------
+
 # Get whitelist
-curl http://localhost:3000/api/admin/whitelist
+curl https://leafy-gecko-141acf.netlify.app/api/admin/whitelist
 
 # Add to whitelist
-curl -X POST http://localhost:3000/api/admin/whitelist \
+curl -X POST https://leafy-gecko-141acf.netlify.app/api/admin/whitelist \
   -H "Content-Type: application/json" \
   -d '{"phrase": "goodword"}'
+
+# Update whitelist word (ej: id=2)
+curl -X PUT https://leafy-gecko-141acf.netlify.app/api/admin/whitelist/2 \
+  -H "Content-Type: application/json" \
+  -d '{"phrase": "updatedgood"}'
+
+# Delete whitelist word (ej: id=2)
+curl -X DELETE https://leafy-gecko-141acf.netlify.app/api/admin/whitelist/2
+
+# -----------------------------
+# Logs
+# -----------------------------
+
+# Get evaluation logs
+curl https://leafy-gecko-141acf.netlify.app/api/admin/logs
 ```
 
 ## Contributing
@@ -188,7 +223,3 @@ curl -X POST http://localhost:3000/api/admin/whitelist \
 3. Make your changes
 4. Add tests if applicable
 5. Submit a pull request
-
-## License
-
-MIT License - see LICENSE file for details
