@@ -1,7 +1,6 @@
 {
   "info": {
     "name": "Profanity Detection API (Fuepucha Hackathon)",
-    "_postman_id": "abcd1234-5678-90ef-ghij-klmnopqrstuv",
     "description": "Collection with all endpoints for the profanity detection demo: evaluate, blacklist CRUD, whitelist CRUD, and logs.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
