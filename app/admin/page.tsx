@@ -8,11 +8,10 @@ import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import { Trash2, Plus, Settings, Home, ArrowLeft } from 'lucide-react';
+import { Loader2, Plus, Trash2, Settings, ArrowLeft, Pencil } from "lucide-react";
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Plus, Trash } from "lucide-react";
 import Link from 'next/link';
 
 interface BlacklistWord {
@@ -36,6 +35,19 @@ export default function AdminPanel() {
   const [isAddingWhitelist, setIsAddingWhitelist] = useState(false);
   const { toast } = useToast();
 
+  // Blacklist edit
+  const [isEditBLOpen, setIsEditBLOpen] = useState(false);
+  const [editBLId, setEditBLId] = useState<number | null>(null);
+  const [editBLPhrase, setEditBLPhrase] = useState("");
+  const [editBLSeverity, setEditBLSeverity] = useState("2");
+  const [isSavingBL, setIsSavingBL] = useState(false);
+
+  // Whitelist edit
+  const [isEditWLOpen, setIsEditWLOpen] = useState(false);
+  const [editWLId, setEditWLId] = useState<number | null>(null);
+  const [editWLPhrase, setEditWLPhrase] = useState("");
+  const [isSavingWL, setIsSavingWL] = useState(false);
+
   useEffect(() => {
     loadData();
   }, []);
@@ -43,8 +55,8 @@ export default function AdminPanel() {
   const loadData = async () => {
     try {
       const [blacklistRes, whitelistRes] = await Promise.all([
-        fetch('/api/admin/blacklist'),
-        fetch('/api/admin/whitelist')
+        fetch('/api/admin/blacklist', { cache: 'no-store' }),
+        fetch('/api/admin/whitelist', { cache: 'no-store' })
       ]);
 
       if (blacklistRes.ok) {
@@ -82,18 +94,16 @@ export default function AdminPanel() {
       if (response.ok) {
         setNewBlacklistWord('');
         setNewBlacklistSeverity('1');
-        loadData();
-        toast({
-          title: 'Success',
-          description: 'Blacklist word added successfully',
-        });
+        await loadData();
+        toast({ title: 'Success', description: 'Blacklist word added successfully' });
       } else {
-        throw new Error('Failed to add word');
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data?.error || 'Failed to add word');
       }
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: 'Error',
-        description: 'Failed to add blacklist word',
+        description: error?.message || 'Failed to add blacklist word',
         variant: 'destructive',
       });
     } finally {
@@ -116,18 +126,16 @@ export default function AdminPanel() {
 
       if (response.ok) {
         setNewWhitelistWord('');
-        loadData();
-        toast({
-          title: 'Success',
-          description: 'Whitelist word added successfully',
-        });
+        await loadData();
+        toast({ title: 'Success', description: 'Whitelist word added successfully' });
       } else {
-        throw new Error('Failed to add word');
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data?.error || 'Failed to add word');
       }
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: 'Error',
-        description: 'Failed to add whitelist word',
+        description: error?.message || 'Failed to add whitelist word',
         variant: 'destructive',
       });
     } finally {
@@ -137,23 +145,18 @@ export default function AdminPanel() {
 
   const deleteBlacklistWord = async (id: number) => {
     try {
-      const response = await fetch(`/api/admin/blacklist/${id}`, {
-        method: 'DELETE',
-      });
-
+      const response = await fetch(`/api/admin/blacklist/${id}`, { method: 'DELETE' });
       if (response.ok) {
-        loadData();
-        toast({
-          title: 'Success',
-          description: 'Blacklist word deleted successfully',
-        });
+        await loadData();
+        toast({ title: 'Success', description: 'Blacklist word deleted successfully' });
       } else {
-        throw new Error('Failed to delete word');
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data?.error || 'Failed to delete word');
       }
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: 'Error',
-        description: 'Failed to delete blacklist word',
+        description: error?.message || 'Failed to delete blacklist word',
         variant: 'destructive',
       });
     }
@@ -161,27 +164,84 @@ export default function AdminPanel() {
 
   const deleteWhitelistWord = async (id: number) => {
     try {
-      const response = await fetch(`/api/admin/whitelist/${id}`, {
-        method: 'DELETE',
-      });
-
+      const response = await fetch(`/api/admin/whitelist/${id}`, { method: 'DELETE' });
       if (response.ok) {
-        loadData();
-        toast({
-          title: 'Success',
-          description: 'Whitelist word deleted successfully',
-        });
+        await loadData();
+        toast({ title: 'Success', description: 'Whitelist word deleted successfully' });
       } else {
-        throw new Error('Failed to delete word');
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data?.error || 'Failed to delete word');
       }
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: 'Error',
-        description: 'Failed to delete whitelist word',
+        description: error?.message || 'Failed to delete whitelist word',
         variant: 'destructive',
       });
     }
   };
+
+  // --- Abrir y guardar (editar) Blacklist ---
+  function openEditBlacklist(w: BlacklistWord) {
+    setEditBLId(w.id);
+    setEditBLPhrase(w.phrase);
+    setEditBLSeverity(String(w.severity));
+    setIsEditBLOpen(true);
+  }
+
+  async function saveEditBlacklist() {
+    if (editBLId == null) return;
+    try {
+      setIsSavingBL(true);
+      const res = await fetch(`/api/admin/blacklist/${editBLId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          phrase: editBLPhrase.trim().toLowerCase(),
+          severity: parseInt(editBLSeverity, 10),
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data?.error || "Update failed");
+
+      setIsEditBLOpen(false);
+      toast({ title: "Updated", description: "Blacklist word updated successfully" });
+      await loadData();
+    } catch (e: any) {
+      toast({ title: "Error", description: e?.message || "Failed to update", variant: "destructive" });
+    } finally {
+      setIsSavingBL(false);
+    }
+  }
+
+  // --- Abrir y guardar (editar) Whitelist ---
+  function openEditWhitelist(w: WhitelistWord) {
+    setEditWLId(w.id);
+    setEditWLPhrase(w.phrase);
+    setIsEditWLOpen(true);
+  }
+
+  async function saveEditWhitelist() {
+    if (editWLId == null) return;
+    try {
+      setIsSavingWL(true);
+      const res = await fetch(`/api/admin/whitelist/${editWLId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phrase: editWLPhrase.trim().toLowerCase() }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data?.error || "Update failed");
+
+      setIsEditWLOpen(false);
+      toast({ title: "Updated", description: "Whitelist word updated successfully" });
+      await loadData();
+    } catch (e: any) {
+      toast({ title: "Error", description: e?.message || "Failed to update", variant: "destructive" });
+    } finally {
+      setIsSavingWL(false);
+    }
+  }
 
   const getSeverityColor = (severity: number) => {
     switch (severity) {
@@ -234,6 +294,7 @@ export default function AdminPanel() {
             <TabsTrigger value="whitelist">Whitelist Management</TabsTrigger>
           </TabsList>
 
+          {/* --- BLACKLIST --- */}
           <TabsContent value="blacklist">
             <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm">
               <CardHeader>
@@ -280,7 +341,7 @@ export default function AdminPanel() {
                       <TableRow className="bg-slate-50">
                         <TableHead>Word/Phrase</TableHead>
                         <TableHead>Severity</TableHead>
-                        <TableHead className="w-20">Actions</TableHead>
+                        <TableHead className="w-28">Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -299,12 +360,22 @@ export default function AdminPanel() {
                                 Level {word.severity} - {getSeverityLabel(word.severity)}
                               </Badge>
                             </TableCell>
-                            <TableCell>
+                            <TableCell className="flex items-center gap-1">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => openEditBlacklist(word)}
+                                className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                                aria-label={`Edit ${word.phrase}`}
+                              >
+                                <Pencil className="h-4 w-4" />
+                              </Button>
                               <Button
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => deleteBlacklistWord(word.id)}
                                 className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                                aria-label={`Delete ${word.phrase}`}
                               >
                                 <Trash2 className="h-4 w-4" />
                               </Button>
@@ -319,6 +390,7 @@ export default function AdminPanel() {
             </Card>
           </TabsContent>
 
+          {/* --- WHITELIST --- */}
           <TabsContent value="whitelist">
             <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm">
               <CardHeader>
@@ -354,7 +426,7 @@ export default function AdminPanel() {
                     <TableHeader>
                       <TableRow className="bg-slate-50">
                         <TableHead>Word/Phrase</TableHead>
-                        <TableHead className="w-20">Actions</TableHead>
+                        <TableHead className="w-28">Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -368,12 +440,22 @@ export default function AdminPanel() {
                         whitelist.map((word) => (
                           <TableRow key={word.id} className="hover:bg-slate-50 transition-colors">
                             <TableCell className="font-mono">{word.phrase}</TableCell>
-                            <TableCell>
+                            <TableCell className="flex items-center gap-1">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => openEditWhitelist(word)}
+                                className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                                aria-label={`Edit ${word.phrase}`}
+                              >
+                                <Pencil className="h-4 w-4" />
+                              </Button>
                               <Button
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => deleteWhitelistWord(word.id)}
                                 className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                                aria-label={`Delete ${word.phrase}`}
                               >
                                 <Trash2 className="h-4 w-4" />
                               </Button>
@@ -389,6 +471,80 @@ export default function AdminPanel() {
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* ----- DIALOG: Edit Blacklist ----- */}
+      <Dialog open={isEditBLOpen} onOpenChange={setIsEditBLOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit blacklist word</DialogTitle>
+            <DialogDescription>Change the phrase and/or severity.</DialogDescription>
+          </DialogHeader>
+
+          <div className="grid gap-4 py-2">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="bl-phrase" className="text-right">Phrase</Label>
+              <Input
+                id="bl-phrase"
+                value={editBLPhrase}
+                onChange={(e) => setEditBLPhrase(e.target.value)}
+                className="col-span-3"
+              />
+            </div>
+
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label className="text-right">Severity</Label>
+              <Select value={editBLSeverity} onValueChange={setEditBLSeverity}>
+                <SelectTrigger className="col-span-3">
+                  <SelectValue placeholder="Severity" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="1">Mild (1)</SelectItem>
+                  <SelectItem value="2">Moderate (2)</SelectItem>
+                  <SelectItem value="3">Severe (3)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setIsEditBLOpen(false)}>Cancel</Button>
+            <Button onClick={saveEditBlacklist} disabled={isSavingBL} className="inline-flex items-center gap-2">
+              {isSavingBL ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+              Save
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* ----- DIALOG: Edit Whitelist ----- */}
+      <Dialog open={isEditWLOpen} onOpenChange={setIsEditWLOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit whitelist word</DialogTitle>
+            <DialogDescription>Change the phrase.</DialogDescription>
+          </DialogHeader>
+
+          <div className="grid gap-4 py-2">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="wl-phrase" className="text-right">Phrase</Label>
+              <Input
+                id="wl-phrase"
+                value={editWLPhrase}
+                onChange={(e) => setEditWLPhrase(e.target.value)}
+                className="col-span-3"
+              />
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setIsEditWLOpen(false)}>Cancel</Button>
+            <Button onClick={saveEditWhitelist} disabled={isSavingWL} className="inline-flex items-center gap-2">
+              {isSavingWL ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+              Save
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

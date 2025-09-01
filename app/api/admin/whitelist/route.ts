@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getWhitelist, addWhitelistWord } from '@/lib/database';
 
+export const dynamic = "force-dynamic";
+
 export async function GET() {
   try {
     const whitelist = await getWhitelist();

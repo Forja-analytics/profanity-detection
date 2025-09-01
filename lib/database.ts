@@ -38,8 +38,8 @@ let blacklistData: BlacklistWord[] = [
   { id: 13, phrase: 'hp', severity: 2 },
   { id: 14, phrase: 'hijueputa', severity: 3 },
   { id: 15, phrase: 'mamar gallo', severity: 2 },
-  { id: 15, phrase: 'viva Petro', severity: 3 },
-  { id: 15, phrase: 'café con azucar', severity: 3 },
+  { id: 16, phrase: 'viva Petro', severity: 3 },
+  { id: 17, phrase: 'café con azucar', severity: 3 },
 ];
 
 let whitelistData: WhitelistWord[] = [
@@ -79,6 +79,44 @@ export async function addWhitelistWord(phrase: string): Promise<WhitelistWord> {
   };
   whitelistData.push(newWord);
   return newWord;
+}
+
+export async function updateBlacklistWord(
+  id: number,
+  updates: { phrase?: string; severity?: number }
+): Promise<BlacklistWord | null> {
+  const index = blacklistData.findIndex(w => w.id === id);
+  if (index === -1) return null;
+
+  if (updates.phrase) {
+    blacklistData[index].phrase = updates.phrase.trim().toLowerCase();
+  }
+  if (updates.severity && [1, 2, 3].includes(updates.severity)) {
+    blacklistData[index].severity = updates.severity;
+  }
+
+  return blacklistData[index];
+}
+
+export async function updateWhitelistWord(
+  id: number,
+  updates: { phrase?: string }
+): Promise<WhitelistWord | null> {
+  const index = whitelistData.findIndex(w => w.id === id);
+  if (index === -1) return null;
+
+  if (typeof updates.phrase === "string") {
+    const p = updates.phrase.trim().toLowerCase();
+    if (!p) return whitelistData[index]; // no vaciar
+    // opcional: evitar duplicados
+    const exists = whitelistData.some(
+      w => w.id !== id && w.phrase === p
+    );
+    if (exists) throw new Error("Already exists in whitelist");
+    whitelistData[index].phrase = p;
+  }
+
+  return whitelistData[index];
 }
 
 export async function deleteBlacklistWord(id: number): Promise<void> {
