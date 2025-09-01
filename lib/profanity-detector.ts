@@ -29,7 +29,8 @@ export function normalizeProfanityText(text: string): string {
   
   // Replace leetspeak
   for (const [leet, char] of Object.entries(LEETSPEAK_MAP)) {
-    normalized = normalized.replace(new RegExp(leet, 'g'), char);
+    const escapedLeet = leet.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    normalized = normalized.replace(new RegExp(escapedLeet, 'g'), char);
   }
   
   // Remove special characters but keep spaces
@@ -37,7 +38,8 @@ export function normalizeProfanityText(text: string): string {
   
   // Handle common substitutions
   for (const [sub, replacement] of Object.entries(SUBSTITUTION_MAP)) {
-    normalized = normalized.replace(new RegExp(sub, 'g'), replacement);
+    const escapedSub = sub.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    normalized = normalized.replace(new RegExp(escapedSub, 'g'), replacement);
   }
   
   // Remove extra spaces
