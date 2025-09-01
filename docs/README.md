@@ -17,7 +17,7 @@ A comprehensive profanity detection system built with Next.js, featuring intelli
 - **Frontend**: Next.js 13+ with TypeScript
 - **UI Components**: shadcn/ui with Tailwind CSS
 - **LLM**: OpenAI API
-- **Database**: In-memory storage (easily replaceable with Supabase/PostgreSQL)
+- **Database**: Prisma hosted in Neon
 - **Icons**: Lucide React
 - **Testing**: Jest with ts-jest
 
@@ -145,8 +145,9 @@ Demo URL: https://leafy-gecko-141acf.netlify.app
 Create a `.env.local` file with:
 
 ```env
-# Optional: OpenAI API key for LLM validation
 OPENAI_API_KEY=your_openai_api_key_here
+
+DATABASE_URL="your_db_url"
 ```
 
 ## Testing
