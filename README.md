@@ -145,10 +145,6 @@ Create a `.env.local` file with:
 # Optional: OpenAI API key for LLM validation
 OPENAI_API_KEY=your_openai_api_key_here
 
-# Optional: Database configuration
-DATABASE_URL=your_database_url_here
-```
-
 ## Testing
 
 Run the development server and test the following scenarios:
