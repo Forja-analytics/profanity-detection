@@ -1,0 +1,190 @@
+{
+  "info": {
+    "name": "Profanity Detection API (Fuepucha Hackathon)",
+    "_postman_id": "abcd1234-5678-90ef-ghij-klmnopqrstuv",
+    "description": "Collection with all endpoints for the profanity detection demo: evaluate, blacklist CRUD, whitelist CRUD, and logs.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Evaluate",
+      "item": [
+        {
+          "name": "POST /api/evaluate",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"text\": \"This is some damn good text\",\n  \"use_llm\": false\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/evaluate",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "evaluate"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Admin - Blacklist",
+      "item": [
+        {
+          "name": "GET /api/admin/blacklist",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/blacklist",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "blacklist"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST /api/admin/blacklist",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phrase\": \"badword\",\n  \"severity\": 2\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/blacklist",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "blacklist"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "PUT /api/admin/blacklist/:id",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phrase\": \"updatedword\",\n  \"severity\": 1\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/blacklist/{{blacklistId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "blacklist", "{{blacklistId}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "DELETE /api/admin/blacklist/:id",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/blacklist/{{blacklistId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "blacklist", "{{blacklistId}}"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Admin - Whitelist",
+      "item": [
+        {
+          "name": "GET /api/admin/whitelist",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/whitelist",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "whitelist"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST /api/admin/whitelist",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phrase\": \"goodword\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/whitelist",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "whitelist"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "PUT /api/admin/whitelist/:id",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phrase\": \"updatedgood\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/whitelist/{{whitelistId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "whitelist", "{{whitelistId}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "DELETE /api/admin/whitelist/:id",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/whitelist/{{whitelistId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "whitelist", "{{whitelistId}}"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Admin - Logs",
+      "item": [
+        {
+          "name": "GET /api/admin/logs",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/logs",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "logs"]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "variable": [
+    { "key": "baseUrl", "value": "https://leafy-gecko-141acf.netlify.app" },
+    { "key": "blacklistId", "value": "3" },
+    { "key": "whitelistId", "value": "2" }
+  ]
+}
