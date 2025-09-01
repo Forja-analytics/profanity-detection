@@ -155,6 +155,10 @@ Run the development server and test the following scenarios:
 4. **Severe Profanity**: "This is fucking terrible"
 5. **Whitelisted Words**: "John Dickinson lived near Putah Creek"
 6. **Leetspeak**: "Th1s 1s b4d t3xt"
+```
+### Postman Collection
+Puedes importar la colección incluida en el repo:
+[profanity-detection.postman_collection.json](./profanity-detection.postman_collection.json)
 
 ## CURL Examples
 
