@@ -162,7 +162,7 @@ Unit tests cover:
 - Respect for whitelist words
 
 ### Architecture Diagram
-![Architecture](./docs/profanity-detection-architecture.png)
+![Architecture](./profanity-detection-architecture.png)
 
 ### Postman Collection
 Puedes importar la colección incluida en el repo:
