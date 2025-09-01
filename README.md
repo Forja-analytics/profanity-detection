@@ -15,6 +15,7 @@ A comprehensive profanity detection system built with Next.js, featuring intelli
 
 - **Frontend**: Next.js 13+ with TypeScript
 - **UI Components**: shadcn/ui with Tailwind CSS
+- **LLM**: OpenAI API
 - **Database**: In-memory storage (easily replaceable with Supabase/PostgreSQL)
 - **Icons**: Lucide React
 
