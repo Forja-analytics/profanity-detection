@@ -10,6 +10,7 @@ A comprehensive profanity detection system built with Next.js, featuring intelli
 - **Evaluation History**: Complete logging of all text evaluations
 - **LLM Integration**: Toggle for enhanced AI-powered validation
 - **Responsive Design**: Works seamlessly across all devices
+- **Unit Tests**: Validation of normalization and key detection logic
 
 ## Tech Stack
 
@@ -18,6 +19,7 @@ A comprehensive profanity detection system built with Next.js, featuring intelli
 - **LLM**: OpenAI API
 - **Database**: In-memory storage (easily replaceable with Supabase/PostgreSQL)
 - **Icons**: Lucide React
+- **Testing**: Jest with ts-jest
 
 ## Getting Started
 
@@ -105,6 +107,7 @@ Response:
 ├── lib/
 │   ├── profanity-detector.ts # Core detection logic
 │   └── database.ts          # Database operations
+├──__tests__/              # Unit tests
 └── components/ui/           # shadcn/ui components
 ```
 
@@ -131,11 +134,11 @@ The system includes sophisticated text normalization:
 npm run build
 ```
 
-### Deploy to Vercel
+### Deploy to Netlify
 
-```bash
-npx vercel --prod
-```
+This project is configured to run on Netlify. Push your repository and connect it to Netlify for automatic deploys.
+Demo URL: https://leafy-gecko-141acf.netlify.app
+
 
 ## Environment Variables
 
@@ -147,15 +150,18 @@ OPENAI_API_KEY=your_openai_api_key_here
 
 ## Testing
 
-Run the development server and test the following scenarios:
-
-1. **Clean Text**: "This is a perfectly normal sentence"
-2. **Mild Profanity**: "This is damn good"
-3. **Moderate Profanity**: "What a bastard"
-4. **Severe Profanity**: "This is fucking terrible"
-5. **Whitelisted Words**: "John Dickinson lived near Putah Creek"
-6. **Leetspeak**: "Th1s 1s b4d t3xt"
+Run the test suite with:
 ```
+npm test
+```
+Unit tests cover:
+- Normalization of leetspeak and accented characters
+- Detection of blacklist words with severity
+- Respect for whitelist words
+
+### Architecture Diagram
+![Architecture](./docs/architecture.png)
+
 ### Postman Collection
 Puedes importar la colección incluida en el repo:
 [profanity-detection.postman_collection.json](./profanity-detection.postman_collection.json)
