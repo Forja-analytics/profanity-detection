@@ -1,0 +1,28 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model BlacklistWord {
+  id       Int    @id @default(autoincrement())
+  phrase   String @unique
+  severity Int
+}
+
+model WhitelistWord {
+  id     Int    @id @default(autoincrement())
+  phrase String @unique
+}
+
+model EvaluationLog {
+  id                  Int      @id @default(autoincrement())
+  input_text          String
+  masked_text         String
+  severity            Int
+  contains_profanity  Boolean
+  timestamp           DateTime @default(now())
+}
