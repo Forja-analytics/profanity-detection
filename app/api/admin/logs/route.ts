@@ -1,12 +1,15 @@
 import { NextResponse } from 'next/server';
 import { getEvaluationLogs } from '@/lib/database';
 
+
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
   try {
     const logs = await getEvaluationLogs();
     return NextResponse.json(logs);
-  } catch (e) {
-    console.error('Error fetching logs:', e);
+  } catch (error) {
+    console.error('Error fetching evaluation logs:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

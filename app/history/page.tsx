@@ -29,7 +29,10 @@ export default function HistoryPage() {
 
   const loadLogs = async () => {
     try {
-      const response = await fetch('/api/admin/logs');
+      const response = await fetch('/api/admin/logs', {
+        cache: 'no-store',       
+        next: { revalidate: 0 },    
+      });
       if (response.ok) {
         const data = await response.json();
         setLogs(data);
