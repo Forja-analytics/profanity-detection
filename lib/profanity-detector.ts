@@ -50,9 +50,6 @@ export async function detectProfanity(text: string, useLLM = false): Promise<Det
   const matches: ProfanityMatch[] = [];
   
   try {
-    // Normalize the input text for detection
-    const normalizedText = normalizeProfanityText(text);
-    
     // Get current blacklist and whitelist
     const [blacklist, whitelist] = await Promise.all([
       getBlacklist(),
@@ -61,6 +58,10 @@ export async function detectProfanity(text: string, useLLM = false): Promise<Det
 
     // Create sets for faster lookup
     const whitelistSet = new Set(whitelist.map(w => w.phrase.toLowerCase()));
+    
+    // Normalize the input text for detection
+    const normalizedText = normalizeProfanityText(text);
+    const originalLower = text.toLowerCase();
     
     // Check each word against blacklist
     for (const blacklistItem of blacklist) {
@@ -71,33 +72,32 @@ export async function detectProfanity(text: string, useLLM = false): Promise<Det
         continue;
       }
       
-      // Check for matches in both original and normalized text
+      // Create regex for word boundary matching
       const escapedPhrase = phrase.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-      const regex = new RegExp(`\\b${escapedPhrase}\\b`, 'gi');
-      let match;
+      const wordBoundaryRegex = new RegExp(`\\b${escapedPhrase}\\b`, 'gi');
+      const containsRegex = new RegExp(escapedPhrase, 'gi');
       
-      // Check original text first
-      while ((match = regex.exec(text)) !== null) {
+      // Check original text with word boundaries
+      let match;
+      while ((match = wordBoundaryRegex.exec(originalLower)) !== null) {
         matches.push({
-          word: match[0],
+          word: text.substring(match.index, match.index + match[0].length),
           severity: blacklistItem.severity,
           start: match.index,
           end: match.index + match[0].length
         });
       }
       
-      // Also check normalized text for obfuscated versions
-      regex.lastIndex = 0; // Reset regex
-      while ((match = regex.exec(normalizedText)) !== null) {
-        // Find corresponding position in original text
-        const originalMatch = text.substring(match.index, match.index + match[0].length);
-        
-        // Avoid duplicates
+      // Reset regex and check for partial matches in normalized text
+      wordBoundaryRegex.lastIndex = 0;
+      while ((match = containsRegex.exec(normalizedText)) !== null) {
         const isDuplicate = matches.some(m => 
-          m.start === match.index && m.end === match.index + match[0].length
+          Math.abs(m.start - match.index) < 3 && m.word.toLowerCase().includes(phrase)
         );
         
         if (!isDuplicate) {
+          // Find the corresponding text in the original
+          const originalMatch = text.substring(match.index, match.index + match[0].length);
           matches.push({
             word: originalMatch,
             severity: blacklistItem.severity,
@@ -106,6 +106,9 @@ export async function detectProfanity(text: string, useLLM = false): Promise<Det
           });
         }
       }
+      
+      // Reset for next iteration
+      containsRegex.lastIndex = 0;
     }
 
     // If LLM is enabled and no matches found, you could add LLM logic here
